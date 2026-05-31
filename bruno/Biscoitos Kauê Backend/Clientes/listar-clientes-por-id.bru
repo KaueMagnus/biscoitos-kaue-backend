@@ -1,0 +1,15 @@
+meta {
+  name: listar-clientes-por-id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/clientes/{id}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

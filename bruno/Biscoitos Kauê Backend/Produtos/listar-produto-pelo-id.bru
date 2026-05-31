@@ -1,0 +1,15 @@
+meta {
+  name: listar-produto-pelo-id
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/produtos/{id}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

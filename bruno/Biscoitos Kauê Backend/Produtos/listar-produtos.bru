@@ -1,0 +1,15 @@
+meta {
+  name: listar-produtos
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/produtos
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

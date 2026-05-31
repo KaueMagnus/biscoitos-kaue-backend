@@ -1,0 +1,15 @@
+meta {
+  name: listar-clientes
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/clientes
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
