@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Biscoitos Kauê Backend",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
