@@ -1,0 +1,27 @@
+package com.biscoitoskaue.backend.controller;
+
+import com.biscoitoskaue.backend.dto.produto.ProdutoResponse;
+import com.biscoitoskaue.backend.service.ProdutoService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/produtos")
+@RequiredArgsConstructor
+public class ProdutoController {
+
+    private final ProdutoService produtoService;
+
+    @GetMapping
+    public ResponseEntity<List<ProdutoResponse>> listarTodos() {
+        return ResponseEntity.ok(produtoService.listarTodos());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProdutoResponse> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(produtoService.buscarPorId(id));
+    }
+}
