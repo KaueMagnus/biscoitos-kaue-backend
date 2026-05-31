@@ -34,6 +34,7 @@ public class Cliente extends BaseEntity {
     @Column(length = 30)
     private String documento;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean ativo = true;
 

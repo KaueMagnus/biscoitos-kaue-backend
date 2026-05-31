@@ -32,6 +32,7 @@ public class Produto extends BaseEntity {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal preco;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean ativo = true;
 

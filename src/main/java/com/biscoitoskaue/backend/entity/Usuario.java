@@ -33,6 +33,7 @@ public class Usuario extends BaseEntity {
     @Column(nullable = false, length = 30)
     private PerfilUsuario perfil;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean ativo = true;
 
