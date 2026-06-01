@@ -1,0 +1,44 @@
+meta {
+  name: criar-pedido
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/pedidos
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "clienteId": 1,
+    "tipo": "NORMAL",
+    "observacao": "Pedido de teste",
+    "motivoTroca": null,
+    "itens": [
+      {
+        "produtoId": 1,
+        "quantidade": 2,
+        "desconto": 0
+      },
+      {
+        "produtoId": 2,
+        "quantidade": 1,
+        "desconto": 1.50
+      }
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+}
