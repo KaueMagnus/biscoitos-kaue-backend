@@ -1,0 +1,44 @@
+package com.biscoitoskaue.backend.controller;
+
+import com.biscoitoskaue.backend.dto.pedido.CriarPedidoRequest;
+import com.biscoitoskaue.backend.dto.pedido.PedidoResponse;
+import com.biscoitoskaue.backend.service.PedidoService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/pedidos")
+@RequiredArgsConstructor
+public class PedidoController {
+
+    private final PedidoService pedidoService;
+
+    @PostMapping
+    public ResponseEntity<PedidoResponse> criarPedido(
+            @Valid @RequestBody CriarPedidoRequest request,
+            Authentication authentication
+    ) {
+        String emailUsuarioLogado = authentication.getName();
+        return ResponseEntity.ok(pedidoService.criarPedido(request, emailUsuarioLogado));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PedidoResponse>> listarPedidos(Authentication authentication) {
+        String emailUsuarioLogado = authentication.getName();
+        return ResponseEntity.ok(pedidoService.listarPedidosDoUsuario(emailUsuarioLogado));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PedidoResponse> buscarPorId(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        String emailUsuarioLogado = authentication.getName();
+        return ResponseEntity.ok(pedidoService.buscarPorId(id, emailUsuarioLogado));
+    }
+}
