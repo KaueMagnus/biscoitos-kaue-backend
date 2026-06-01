@@ -1,0 +1,146 @@
+package com.biscoitoskaue.backend.service;
+
+import com.biscoitoskaue.backend.dto.pedido.*;
+import com.biscoitoskaue.backend.entity.*;
+import com.biscoitoskaue.backend.enums.StatusPedido;
+import com.biscoitoskaue.backend.enums.TipoPedido;
+import com.biscoitoskaue.backend.repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class PedidoService {
+
+    private final PedidoRepository pedidoRepository;
+    private final ClienteRepository clienteRepository;
+    private final ProdutoRepository produtoRepository;
+    private final UsuarioRepository usuarioRepository;
+
+    @Transactional
+    public PedidoResponse criarPedido(CriarPedidoRequest request, String emailUsuarioLogado) {
+        Cliente cliente = clienteRepository.findById(request.clienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        validarPedido(request);
+
+        Pedido pedido = new Pedido();
+        pedido.setCliente(cliente);
+        pedido.setUsuario(usuario);
+        pedido.setDataCriacao(LocalDateTime.now());
+        pedido.setTipo(request.tipo());
+        pedido.setStatus(StatusPedido.PENDENTE);
+        pedido.setObservacao(request.observacao());
+        pedido.setMotivoTroca(request.motivoTroca());
+
+        List<ItemPedido> itens = request.itens().stream()
+                .map(itemRequest -> criarItemPedido(itemRequest, pedido))
+                .toList();
+
+        BigDecimal valorTotal = itens.stream()
+                .map(ItemPedido::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        pedido.setValorTotal(valorTotal);
+        pedido.setItens(itens);
+
+        Pedido pedidoSalvo = pedidoRepository.save(pedido);
+
+        return toResponse(pedidoSalvo);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PedidoResponse> listarPedidosDoUsuario(String emailUsuarioLogado) {
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        return pedidoRepository.findByUsuarioId(usuario.getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PedidoResponse buscarPorId(Long id, String emailUsuarioLogado) {
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        if (!pedido.getUsuario().getId().equals(usuario.getId())) {
+            throw new RuntimeException("Acesso negado ao pedido");
+        }
+
+        return toResponse(pedido);
+    }
+
+    private void validarPedido(CriarPedidoRequest request) {
+        if (request.itens() == null || request.itens().isEmpty()) {
+            throw new RuntimeException("O pedido deve possuir ao menos um item");
+        }
+
+        if (request.tipo() == TipoPedido.TROCA &&
+                (request.motivoTroca() == null || request.motivoTroca().isBlank())) {
+            throw new RuntimeException("Pedido de troca exige motivo da troca");
+        }
+    }
+
+    private ItemPedido criarItemPedido(ItemPedidoRequest request, Pedido pedido) {
+        Produto produto = produtoRepository.findById(request.produtoId())
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        BigDecimal desconto = request.desconto() != null ? request.desconto() : BigDecimal.ZERO;
+        BigDecimal precoUnitario = produto.getPreco();
+        BigDecimal subtotal = precoUnitario
+                .multiply(BigDecimal.valueOf(request.quantidade()))
+                .subtract(desconto);
+
+        ItemPedido item = new ItemPedido();
+        item.setPedido(pedido);
+        item.setProduto(produto);
+        item.setQuantidade(request.quantidade());
+        item.setPrecoUnitario(precoUnitario);
+        item.setDesconto(desconto);
+        item.setSubtotal(subtotal);
+
+        return item;
+    }
+
+    private PedidoResponse toResponse(Pedido pedido) {
+        List<ItemPedidoResponse> itensResponse = pedido.getItens().stream()
+                .map(item -> new ItemPedidoResponse(
+                        item.getId(),
+                        item.getProduto().getId(),
+                        item.getProduto().getNome(),
+                        item.getQuantidade(),
+                        item.getPrecoUnitario(),
+                        item.getDesconto(),
+                        item.getSubtotal()
+                ))
+                .toList();
+
+        return new PedidoResponse(
+                pedido.getId(),
+                pedido.getCliente().getId(),
+                pedido.getCliente().getNome(),
+                pedido.getUsuario().getId(),
+                pedido.getUsuario().getNome(),
+                pedido.getDataCriacao(),
+                pedido.getTipo(),
+                pedido.getStatus(),
+                pedido.getObservacao(),
+                pedido.getMotivoTroca(),
+                pedido.getValorTotal(),
+                itensResponse
+        );
+    }
+}
