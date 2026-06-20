@@ -2,6 +2,7 @@ package com.biscoitoskaue.backend.service;
 
 import com.biscoitoskaue.backend.dto.pedido.*;
 import com.biscoitoskaue.backend.entity.*;
+import com.biscoitoskaue.backend.enums.PerfilUsuario;
 import com.biscoitoskaue.backend.enums.StatusPedido;
 import com.biscoitoskaue.backend.enums.TipoPedido;
 import com.biscoitoskaue.backend.repository.*;
@@ -31,6 +32,7 @@ public class PedidoService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         validarPedido(request);
+        validarClienteDoRepresentante(cliente, usuario);
 
         Pedido pedido = new Pedido();
         pedido.setCliente(cliente);
@@ -91,6 +93,18 @@ public class PedidoService {
         if (request.tipo() == TipoPedido.TROCA &&
                 (request.motivoTroca() == null || request.motivoTroca().isBlank())) {
             throw new RuntimeException("Pedido de troca exige motivo da troca");
+        }
+    }
+
+    private void validarClienteDoRepresentante(Cliente cliente, Usuario usuario) {
+        if (!Boolean.TRUE.equals(cliente.getAtivo())) {
+            throw new RuntimeException("Cliente não encontrado");
+        }
+
+        if (usuario.getPerfil() == PerfilUsuario.REPRESENTANTE &&
+                (cliente.getRepresentante() == null ||
+                        !cliente.getRepresentante().getId().equals(usuario.getId()))) {
+            throw new RuntimeException("Representante não pode criar pedido para cliente de outro representante");
         }
     }
 

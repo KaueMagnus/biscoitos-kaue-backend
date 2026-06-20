@@ -38,6 +38,10 @@ public class Cliente extends BaseEntity {
     @Column(nullable = false)
     private Boolean ativo = true;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "representante_id")
+    private Usuario representante;
+
     @OneToMany(mappedBy = "cliente")
     @Builder.Default
     private List<Pedido> pedidos = new ArrayList<>();
