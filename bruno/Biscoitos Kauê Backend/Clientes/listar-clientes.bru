@@ -7,9 +7,18 @@ meta {
 get {
   url: {{baseUrl}}/clientes
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+headers {
+  ~Authorization: 
+}
+
+auth:bearer {
+  token: {{token}}
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

@@ -1,5 +1,6 @@
 package com.biscoitoskaue.backend.controller;
 
+import com.biscoitoskaue.backend.dto.pedido.AlterarStatusPedidoRequest;
 import com.biscoitoskaue.backend.dto.pedido.CriarPedidoRequest;
 import com.biscoitoskaue.backend.dto.pedido.PedidoResponse;
 import com.biscoitoskaue.backend.service.PedidoService;
@@ -40,5 +41,15 @@ public class PedidoController {
     ) {
         String emailUsuarioLogado = authentication.getName();
         return ResponseEntity.ok(pedidoService.buscarPorId(id, emailUsuarioLogado));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<PedidoResponse> alterarStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody AlterarStatusPedidoRequest request,
+            Authentication authentication
+    ) {
+        String emailUsuarioLogado = authentication.getName();
+        return ResponseEntity.ok(pedidoService.alterarStatus(id, request, emailUsuarioLogado));
     }
 }

@@ -7,6 +7,7 @@ import com.biscoitoskaue.backend.enums.StatusPedido;
 import com.biscoitoskaue.backend.enums.TipoPedido;
 import com.biscoitoskaue.backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,7 +65,11 @@ public class PedidoService {
         Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        return pedidoRepository.findByUsuarioId(usuario.getId())
+        List<Pedido> pedidos = usuario.getPerfil() == PerfilUsuario.ADMIN
+                ? pedidoRepository.findAll()
+                : pedidoRepository.findByUsuarioId(usuario.getId());
+
+        return pedidos
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -75,14 +80,30 @@ public class PedidoService {
         Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
+        Pedido pedido = usuario.getPerfil() == PerfilUsuario.ADMIN
+                ? pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"))
+                : pedidoRepository.findByIdAndUsuarioId(id, usuario.getId())
+                .orElseThrow(() -> new AccessDeniedException("Acesso negado ao pedido"));
+
+        return toResponse(pedido);
+    }
+
+    @Transactional
+    public PedidoResponse alterarStatus(Long id, AlterarStatusPedidoRequest request, String emailUsuarioLogado) {
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (usuario.getPerfil() != PerfilUsuario.ADMIN) {
+            throw new AccessDeniedException("Somente administradores podem alterar status de pedido");
+        }
+
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        if (!pedido.getUsuario().getId().equals(usuario.getId())) {
-            throw new RuntimeException("Acesso negado ao pedido");
-        }
+        pedido.setStatus(request.status());
 
-        return toResponse(pedido);
+        return toResponse(pedidoRepository.save(pedido));
     }
 
     private void validarPedido(CriarPedidoRequest request) {

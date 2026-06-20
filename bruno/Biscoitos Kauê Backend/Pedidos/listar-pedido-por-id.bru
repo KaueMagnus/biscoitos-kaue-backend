@@ -5,11 +5,16 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/pedidos/{id}
+  url: {{baseUrl}}/pedidos/6
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }
