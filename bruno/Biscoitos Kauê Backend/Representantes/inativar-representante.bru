@@ -1,0 +1,20 @@
+meta {
+  name: inativar-representante
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/representantes/{id}/inativar
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

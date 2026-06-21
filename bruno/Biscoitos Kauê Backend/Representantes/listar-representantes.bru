@@ -1,0 +1,15 @@
+meta {
+  name: listar-representantes
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/representantes
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
