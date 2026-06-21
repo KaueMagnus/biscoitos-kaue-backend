@@ -1,0 +1,15 @@
+meta {
+  name: inativar-produto
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/produtos/{id}/inativar
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

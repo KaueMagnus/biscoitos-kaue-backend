@@ -1,0 +1,15 @@
+meta {
+  name: editar-produto
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/produtos/{id}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
