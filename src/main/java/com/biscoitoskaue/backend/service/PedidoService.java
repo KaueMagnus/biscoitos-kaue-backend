@@ -23,6 +23,7 @@ public class PedidoService {
     private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final OrderEmailService orderEmailService;
 
     @Transactional
     public PedidoResponse criarPedido(CriarPedidoRequest request, String emailUsuarioLogado) {
@@ -56,6 +57,7 @@ public class PedidoService {
         pedido.setItens(itens);
 
         Pedido pedidoSalvo = pedidoRepository.save(pedido);
+        orderEmailService.enviarResumoPedido(pedidoSalvo);
 
         return toResponse(pedidoSalvo);
     }
