@@ -5,6 +5,8 @@ import com.biscoitoskaue.backend.dto.cliente.ClienteResponse;
 import com.biscoitoskaue.backend.entity.Cliente;
 import com.biscoitoskaue.backend.entity.Usuario;
 import com.biscoitoskaue.backend.enums.PerfilUsuario;
+import com.biscoitoskaue.backend.exception.ForbiddenException;
+import com.biscoitoskaue.backend.exception.ResourceNotFoundException;
 import com.biscoitoskaue.backend.repository.ClienteRepository;
 import com.biscoitoskaue.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,9 +42,9 @@ public class ClienteService {
 
         Cliente cliente = usuario.getPerfil() == PerfilUsuario.ADMIN
                 ? clienteRepository.findByIdAndAtivoTrue(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"))
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"))
                 : clienteRepository.findByIdAndAtivoTrueAndRepresentanteId(id, usuario.getId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
 
         return toResponse(cliente);
     }
@@ -52,7 +54,7 @@ public class ClienteService {
         Usuario usuario = buscarUsuarioLogado(emailUsuarioLogado);
 
         if (usuario.getPerfil() != PerfilUsuario.REPRESENTANTE) {
-            throw new RuntimeException("Somente representantes podem cadastrar clientes");
+            throw new ForbiddenException("Somente representantes podem cadastrar clientes");
         }
 
         Cliente cliente = Cliente.builder()
@@ -70,7 +72,7 @@ public class ClienteService {
 
     private Usuario buscarUsuarioLogado(String emailUsuarioLogado) {
         return usuarioRepository.findByEmail(emailUsuarioLogado)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
     private ClienteResponse toResponse(Cliente cliente) {

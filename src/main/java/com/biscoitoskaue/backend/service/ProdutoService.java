@@ -5,10 +5,12 @@ import com.biscoitoskaue.backend.dto.produto.ProdutoResponse;
 import com.biscoitoskaue.backend.entity.Produto;
 import com.biscoitoskaue.backend.entity.Usuario;
 import com.biscoitoskaue.backend.enums.PerfilUsuario;
+import com.biscoitoskaue.backend.exception.BusinessException;
+import com.biscoitoskaue.backend.exception.ForbiddenException;
+import com.biscoitoskaue.backend.exception.ResourceNotFoundException;
 import com.biscoitoskaue.backend.repository.ProdutoRepository;
 import com.biscoitoskaue.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,9 +43,9 @@ public class ProdutoService {
 
         Produto produto = usuario.getPerfil() == PerfilUsuario.ADMIN
                 ? produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"))
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"))
                 : produtoRepository.findByIdAndAtivoTrue(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
         return toResponse(produto);
     }
@@ -69,7 +71,7 @@ public class ProdutoService {
         validarAdmin(emailUsuarioLogado);
 
         Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
         validarCodigoDisponivel(request.codigo(), id);
 
@@ -87,7 +89,7 @@ public class ProdutoService {
         validarAdmin(emailUsuarioLogado);
 
         Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
         produto.setAtivo(false);
 
@@ -96,14 +98,14 @@ public class ProdutoService {
 
     private Usuario buscarUsuarioLogado(String emailUsuarioLogado) {
         return usuarioRepository.findByEmail(emailUsuarioLogado)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
     private void validarAdmin(String emailUsuarioLogado) {
         Usuario usuario = buscarUsuarioLogado(emailUsuarioLogado);
 
         if (usuario.getPerfil() != PerfilUsuario.ADMIN) {
-            throw new AccessDeniedException("Somente administradores podem gerenciar produtos");
+            throw new ForbiddenException("Somente administradores podem gerenciar produtos");
         }
     }
 
@@ -111,7 +113,7 @@ public class ProdutoService {
         produtoRepository.findByCodigo(codigo)
                 .filter(produto -> idProdutoAtual == null || !produto.getId().equals(idProdutoAtual))
                 .ifPresent(produto -> {
-                    throw new RuntimeException("Código de produto já cadastrado");
+                    throw new BusinessException("Código de produto já cadastrado");
                 });
     }
 

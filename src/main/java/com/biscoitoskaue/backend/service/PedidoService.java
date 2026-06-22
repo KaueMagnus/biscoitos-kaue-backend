@@ -5,9 +5,11 @@ import com.biscoitoskaue.backend.entity.*;
 import com.biscoitoskaue.backend.enums.PerfilUsuario;
 import com.biscoitoskaue.backend.enums.StatusPedido;
 import com.biscoitoskaue.backend.enums.TipoPedido;
+import com.biscoitoskaue.backend.exception.BusinessException;
+import com.biscoitoskaue.backend.exception.ForbiddenException;
+import com.biscoitoskaue.backend.exception.ResourceNotFoundException;
 import com.biscoitoskaue.backend.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,10 +30,10 @@ public class PedidoService {
     @Transactional
     public PedidoResponse criarPedido(CriarPedidoRequest request, String emailUsuarioLogado) {
         Cliente cliente = clienteRepository.findById(request.clienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
 
         Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         validarPedido(request);
         validarClienteDoRepresentante(cliente, usuario);
@@ -65,7 +67,7 @@ public class PedidoService {
     @Transactional(readOnly = true)
     public List<PedidoResponse> listarPedidosDoUsuario(String emailUsuarioLogado) {
         Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         List<Pedido> pedidos = usuario.getPerfil() == PerfilUsuario.ADMIN
                 ? pedidoRepository.findAll()
@@ -80,13 +82,13 @@ public class PedidoService {
     @Transactional(readOnly = true)
     public PedidoResponse buscarPorId(Long id, String emailUsuarioLogado) {
         Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         Pedido pedido = usuario.getPerfil() == PerfilUsuario.ADMIN
                 ? pedidoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"))
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado"))
                 : pedidoRepository.findByIdAndUsuarioId(id, usuario.getId())
-                .orElseThrow(() -> new AccessDeniedException("Acesso negado ao pedido"));
+                .orElseThrow(() -> new ForbiddenException("Acesso negado ao pedido"));
 
         return toResponse(pedido);
     }
@@ -94,14 +96,14 @@ public class PedidoService {
     @Transactional
     public PedidoResponse alterarStatus(Long id, AlterarStatusPedidoRequest request, String emailUsuarioLogado) {
         Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         if (usuario.getPerfil() != PerfilUsuario.ADMIN) {
-            throw new AccessDeniedException("Somente administradores podem alterar status de pedido");
+            throw new ForbiddenException("Somente administradores podem alterar status de pedido");
         }
 
         Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido não encontrado"));
 
         pedido.setStatus(request.status());
 
@@ -110,30 +112,30 @@ public class PedidoService {
 
     private void validarPedido(CriarPedidoRequest request) {
         if (request.itens() == null || request.itens().isEmpty()) {
-            throw new RuntimeException("O pedido deve possuir ao menos um item");
+            throw new BusinessException("O pedido deve possuir ao menos um item");
         }
 
         if (request.tipo() == TipoPedido.TROCA &&
                 (request.motivoTroca() == null || request.motivoTroca().isBlank())) {
-            throw new RuntimeException("Pedido de troca exige motivo da troca");
+            throw new BusinessException("Pedido de troca exige motivo da troca");
         }
     }
 
     private void validarClienteDoRepresentante(Cliente cliente, Usuario usuario) {
         if (!Boolean.TRUE.equals(cliente.getAtivo())) {
-            throw new RuntimeException("Cliente não encontrado");
+            throw new ResourceNotFoundException("Cliente não encontrado");
         }
 
         if (usuario.getPerfil() == PerfilUsuario.REPRESENTANTE &&
                 (cliente.getRepresentante() == null ||
                         !cliente.getRepresentante().getId().equals(usuario.getId()))) {
-            throw new RuntimeException("Representante não pode criar pedido para cliente de outro representante");
+            throw new ForbiddenException("Representante não pode criar pedido para cliente de outro representante");
         }
     }
 
     private ItemPedido criarItemPedido(ItemPedidoRequest request, Pedido pedido) {
         Produto produto = produtoRepository.findById(request.produtoId())
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
         BigDecimal desconto = request.desconto() != null ? request.desconto() : BigDecimal.ZERO;
         BigDecimal precoUnitario = produto.getPreco();

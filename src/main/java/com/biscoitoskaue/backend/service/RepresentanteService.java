@@ -4,9 +4,11 @@ import com.biscoitoskaue.backend.dto.representante.RepresentanteRequest;
 import com.biscoitoskaue.backend.dto.representante.RepresentanteResponse;
 import com.biscoitoskaue.backend.entity.Usuario;
 import com.biscoitoskaue.backend.enums.PerfilUsuario;
+import com.biscoitoskaue.backend.exception.BusinessException;
+import com.biscoitoskaue.backend.exception.ForbiddenException;
+import com.biscoitoskaue.backend.exception.ResourceNotFoundException;
 import com.biscoitoskaue.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,7 +53,7 @@ public class RepresentanteService {
         validarAdmin(emailUsuarioLogado);
 
         Usuario representante = usuarioRepository.findByIdAndPerfil(id, PerfilUsuario.REPRESENTANTE)
-                .orElseThrow(() -> new RuntimeException("Representante não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Representante não encontrado"));
 
         representante.setAtivo(false);
 
@@ -60,17 +62,17 @@ public class RepresentanteService {
 
     private void validarAdmin(String emailUsuarioLogado) {
         Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         if (usuario.getPerfil() != PerfilUsuario.ADMIN) {
-            throw new AccessDeniedException("Somente administradores podem gerenciar representantes");
+            throw new ForbiddenException("Somente administradores podem gerenciar representantes");
         }
     }
 
     private void validarEmailDisponivel(String email) {
         usuarioRepository.findByEmail(email)
                 .ifPresent(usuario -> {
-                    throw new RuntimeException("E-mail já cadastrado");
+                    throw new BusinessException("E-mail já cadastrado");
                 });
     }
 
