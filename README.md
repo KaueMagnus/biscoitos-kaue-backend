@@ -458,9 +458,7 @@ https://github.com/KaueMagnus/biscoitos-kaue-web
 
 APK:
 
-```text
-EM_BREVE
-```
+[Baixar APK do aplicativo mobile](https://drive.google.com/file/d/1AYGlK3rkz0xZrCHLfP76-dT7p7OwhFVs/view?usp=sharing)
 
 ---
 
