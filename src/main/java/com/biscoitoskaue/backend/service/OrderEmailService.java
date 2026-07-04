@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -33,6 +34,7 @@ public class OrderEmailService {
     @Value("${app.pedidos.email-destino:}")
     private String destinatarioPedidos;
 
+    @Async
     public void enviarResumoPedido(Pedido pedido) {
         if (destinatarioPedidos == null || destinatarioPedidos.isBlank()) {
             logger.warn("E-mail de destino de pedidos nao configurado. Pedido {} salvo sem envio de e-mail.", pedido.getId());
