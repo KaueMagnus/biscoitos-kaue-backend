@@ -3,6 +3,7 @@ package com.biscoitoskaue.backend.service;
 import com.biscoitoskaue.backend.entity.ItemPedido;
 import com.biscoitoskaue.backend.entity.Pedido;
 import com.biscoitoskaue.backend.enums.TipoPedido;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -10,13 +11,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +35,18 @@ public class OrderEmailService {
     private static final Locale LOCALE_BRASIL = Locale.forLanguageTag("pt-BR");
 
     private final JavaMailSender mailSender;
+    private final ObjectMapper objectMapper;
+
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+
+    @Value("${app.email.provider:smtp}")
+    private String emailProvider;
+
+    @Value("${resend.api.key:}")
+    private String resendApiKey;
+
+    @Value("${resend.api.url:https://api.resend.com/emails}")
+    private String resendApiUrl;
 
     @Value("${app.mail.from:}")
     private String remetente;
@@ -42,21 +62,82 @@ public class OrderEmailService {
         }
 
         try {
-            MimeMessage mensagem = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mensagem, "UTF-8");
-
-            helper.setTo(destinatarioPedidos);
-            helper.setSubject("Novo pedido #" + pedido.getId() + " - " + pedido.getCliente().getNome());
-            helper.setText(montarResumoPedidoHtml(pedido), true);
-
-            if (remetente != null && !remetente.isBlank()) {
-                helper.setFrom(remetente);
+            if ("resend".equalsIgnoreCase(emailProvider)) {
+                enviarComResend(pedido);
+                return;
             }
 
-            mailSender.send(mensagem);
+            enviarComSmtp(pedido);
         } catch (Exception exception) {
             logger.error("Nao foi possivel enviar e-mail do pedido {}.", pedido.getId(), exception);
         }
+    }
+
+    private void enviarComResend(Pedido pedido) throws Exception {
+        if (resendApiKey == null || resendApiKey.isBlank()) {
+            logger.warn("RESEND_API_KEY nao configurada. Pedido {} salvo sem envio de e-mail.", pedido.getId());
+            return;
+        }
+
+        if (remetente == null || remetente.isBlank()) {
+            logger.warn("MAIL_FROM nao configurado. Pedido {} salvo sem envio de e-mail.", pedido.getId());
+            return;
+        }
+
+        Map<String, Object> body = Map.of(
+                "from", remetente,
+                "to", destinatarios(),
+                "subject", montarAssunto(pedido),
+                "html", montarResumoPedidoHtml(pedido)
+        );
+
+        String json = objectMapper.writeValueAsString(body);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(resendApiUrl))
+                .header("Authorization", "Bearer " + resendApiKey)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(
+                request,
+                HttpResponse.BodyHandlers.ofString()
+        );
+
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            throw new IllegalStateException(
+                    "Resend retornou status " + response.statusCode() + ": " + response.body()
+            );
+        }
+
+        logger.info("E-mail do pedido {} enviado via Resend. Resposta: {}", pedido.getId(), response.body());
+    }
+
+    private void enviarComSmtp(Pedido pedido) throws Exception {
+        MimeMessage mensagem = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(mensagem, "UTF-8");
+
+        helper.setTo(destinatarios().toArray(new String[0]));
+        helper.setSubject(montarAssunto(pedido));
+        helper.setText(montarResumoPedidoHtml(pedido), true);
+
+        if (remetente != null && !remetente.isBlank()) {
+            helper.setFrom(remetente);
+        }
+
+        mailSender.send(mensagem);
+    }
+
+    private String montarAssunto(Pedido pedido) {
+        return "Novo pedido #" + pedido.getId() + " - " + pedido.getCliente().getNome();
+    }
+
+    private List<String> destinatarios() {
+        return Arrays.stream(destinatarioPedidos.split(","))
+                .map(String::trim)
+                .filter(email -> !email.isBlank())
+                .toList();
     }
 
     private String montarResumoPedidoHtml(Pedido pedido) {
