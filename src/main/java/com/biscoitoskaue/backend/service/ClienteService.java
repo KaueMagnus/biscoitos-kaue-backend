@@ -5,6 +5,7 @@ import com.biscoitoskaue.backend.dto.cliente.ClienteResponse;
 import com.biscoitoskaue.backend.entity.Cliente;
 import com.biscoitoskaue.backend.entity.Usuario;
 import com.biscoitoskaue.backend.enums.PerfilUsuario;
+import com.biscoitoskaue.backend.exception.BusinessException;
 import com.biscoitoskaue.backend.exception.ForbiddenException;
 import com.biscoitoskaue.backend.exception.ResourceNotFoundException;
 import com.biscoitoskaue.backend.repository.ClienteRepository;
@@ -57,12 +58,45 @@ public class ClienteService {
             throw new ForbiddenException("Somente representantes podem cadastrar clientes");
         }
 
+        String nomeFantasia = limparTexto(request.nomeFantasia());
+        String razaoSocial = limparTexto(request.razaoSocial());
+        String nomeAntigo = limparTexto(request.nome());
+
+        String nomeParaCompatibilidade = primeiroTexto(
+                nomeFantasia,
+                razaoSocial,
+                nomeAntigo
+        );
+
+        if (nomeParaCompatibilidade == null) {
+            throw new BusinessException("Informe a razão social ou o nome fantasia do cliente");
+        }
+
+        String cnpj = limparTexto(request.cnpj());
+        String documentoAntigo = limparTexto(request.documento());
+
+        String documentoParaCompatibilidade = primeiroTexto(
+                cnpj,
+                documentoAntigo
+        );
+
         Cliente cliente = Cliente.builder()
-                .nome(request.nome())
-                .cidade(request.cidade())
-                .telefone(request.telefone())
-                .email(request.email())
-                .documento(request.documento())
+                .nome(nomeParaCompatibilidade)
+                .cidade(limparTexto(request.cidade()))
+                .telefone(limparTexto(request.telefone()))
+                .email(limparTexto(request.email()))
+                .documento(documentoParaCompatibilidade)
+
+                .razaoSocial(razaoSocial)
+                .nomeFantasia(nomeFantasia)
+                .cnpj(cnpj)
+                .inscricaoEstadual(limparTexto(request.inscricaoEstadual()))
+                .nomeComprador(limparTexto(request.nomeComprador()))
+                .rua(limparTexto(request.rua()))
+                .bairro(limparTexto(request.bairro()))
+                .estado(limparTexto(request.estado()))
+                .cep(limparTexto(request.cep()))
+
                 .ativo(true)
                 .representante(usuario)
                 .build();
@@ -85,9 +119,38 @@ public class ClienteService {
                 cliente.getTelefone(),
                 cliente.getEmail(),
                 cliente.getDocumento(),
+
+                cliente.getRazaoSocial(),
+                cliente.getNomeFantasia(),
+                cliente.getCnpj(),
+                cliente.getInscricaoEstadual(),
+                cliente.getNomeComprador(),
+                cliente.getRua(),
+                cliente.getBairro(),
+                cliente.getEstado(),
+                cliente.getCep(),
+
                 representante != null ? representante.getId() : null,
                 representante != null ? representante.getNome() : null,
                 cliente.getAtivo()
         );
+    }
+
+    private String limparTexto(String valor) {
+        if (valor == null || valor.trim().isEmpty()) {
+            return null;
+        }
+
+        return valor.trim();
+    }
+
+    private String primeiroTexto(String... valores) {
+        for (String valor : valores) {
+            if (valor != null && !valor.trim().isEmpty()) {
+                return valor.trim();
+            }
+        }
+
+        return null;
     }
 }
