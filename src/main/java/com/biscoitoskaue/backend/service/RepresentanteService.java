@@ -2,6 +2,7 @@ package com.biscoitoskaue.backend.service;
 
 import com.biscoitoskaue.backend.dto.representante.RepresentanteRequest;
 import com.biscoitoskaue.backend.dto.representante.RepresentanteResponse;
+import com.biscoitoskaue.backend.dto.representante.RedefinirSenhaRepresentanteRequest;
 import com.biscoitoskaue.backend.entity.Usuario;
 import com.biscoitoskaue.backend.enums.PerfilUsuario;
 import com.biscoitoskaue.backend.exception.BusinessException;
@@ -56,6 +57,22 @@ public class RepresentanteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Representante não encontrado"));
 
         representante.setAtivo(false);
+
+        return toResponse(usuarioRepository.save(representante));
+    }
+
+    @Transactional
+    public RepresentanteResponse redefinirSenha(
+            Long id,
+            RedefinirSenhaRepresentanteRequest request,
+            String emailUsuarioLogado
+    ) {
+        validarAdmin(emailUsuarioLogado);
+
+        Usuario representante = usuarioRepository.findByIdAndPerfil(id, PerfilUsuario.REPRESENTANTE)
+                .orElseThrow(() -> new ResourceNotFoundException("Representante não encontrado"));
+
+        representante.setSenha(passwordEncoder.encode(request.novaSenha()));
 
         return toResponse(usuarioRepository.save(representante));
     }

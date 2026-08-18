@@ -2,6 +2,7 @@ package com.biscoitoskaue.backend.controller;
 
 import com.biscoitoskaue.backend.dto.representante.RepresentanteRequest;
 import com.biscoitoskaue.backend.dto.representante.RepresentanteResponse;
+import com.biscoitoskaue.backend.dto.representante.RedefinirSenhaRepresentanteRequest;
 import com.biscoitoskaue.backend.service.RepresentanteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,5 +41,17 @@ public class RepresentanteController {
     ) {
         String emailUsuarioLogado = authentication.getName();
         return ResponseEntity.ok(representanteService.inativar(id, emailUsuarioLogado));
+    }
+
+    @PatchMapping("/{id}/senha")
+    public ResponseEntity<RepresentanteResponse> redefinirSenha(
+            @PathVariable Long id,
+            @Valid @RequestBody RedefinirSenhaRepresentanteRequest request,
+            Authentication authentication
+    ) {
+        String emailUsuarioLogado = authentication.getName();
+        return ResponseEntity.ok(
+                representanteService.redefinirSenha(id, request, emailUsuarioLogado)
+        );
     }
 }
