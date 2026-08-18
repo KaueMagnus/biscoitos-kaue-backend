@@ -1,5 +1,6 @@
 package com.biscoitoskaue.backend.dto.pedido;
 
+import com.biscoitoskaue.backend.dto.cliente.ClienteResponse;
 import com.biscoitoskaue.backend.enums.StatusPedido;
 import com.biscoitoskaue.backend.enums.TipoPedido;
 
@@ -19,6 +20,7 @@ public record PedidoResponse(
         String observacao,
         String motivoTroca,
         BigDecimal valorTotal,
-        List<ItemPedidoResponse> itens
+        List<ItemPedidoResponse> itens,
+        ClienteResponse cliente
 ) {
 }

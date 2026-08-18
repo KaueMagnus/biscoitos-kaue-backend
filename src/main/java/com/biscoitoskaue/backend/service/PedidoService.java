@@ -1,6 +1,7 @@
 package com.biscoitoskaue.backend.service;
 
 import com.biscoitoskaue.backend.dto.pedido.*;
+import com.biscoitoskaue.backend.dto.cliente.ClienteResponse;
 import com.biscoitoskaue.backend.entity.*;
 import com.biscoitoskaue.backend.enums.PerfilUsuario;
 import com.biscoitoskaue.backend.enums.StatusPedido;
@@ -166,7 +167,7 @@ public class PedidoService {
                         item.getSubtotal()
                 ))
                 .toList();
-
+        ClienteResponse clienteResponse = toClienteResponse(pedido.getCliente());
         return new PedidoResponse(
                 pedido.getId(),
                 pedido.getCliente().getId(),
@@ -179,7 +180,31 @@ public class PedidoService {
                 pedido.getObservacao(),
                 pedido.getMotivoTroca(),
                 pedido.getValorTotal(),
-                itensResponse
+                itensResponse,
+                clienteResponse
+        );
+    }
+
+    private ClienteResponse toClienteResponse(Cliente cliente) {
+        return new ClienteResponse(
+                cliente.getId(),
+                cliente.getNome(),
+                cliente.getCidade(),
+                cliente.getTelefone(),
+                cliente.getEmail(),
+                cliente.getDocumento(),
+                cliente.getRazaoSocial(),
+                cliente.getNomeFantasia(),
+                cliente.getCnpj(),
+                cliente.getInscricaoEstadual(),
+                cliente.getNomeComprador(),
+                cliente.getRua(),
+                cliente.getBairro(),
+                cliente.getEstado(),
+                cliente.getCep(),
+                cliente.getRepresentante() != null ? cliente.getRepresentante().getId() : null,
+                cliente.getRepresentante() != null ? cliente.getRepresentante().getNome() : null,
+                cliente.getAtivo()
         );
     }
 }

@@ -2,6 +2,7 @@ package com.biscoitoskaue.backend.service;
 
 import com.biscoitoskaue.backend.entity.ItemPedido;
 import com.biscoitoskaue.backend.entity.Pedido;
+import com.biscoitoskaue.backend.entity.Cliente;
 import com.biscoitoskaue.backend.enums.TipoPedido;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.internet.MimeMessage;
@@ -190,6 +191,8 @@ public class OrderEmailService {
 
         html.append("</table>");
 
+        html.append(montarDadosClienteParaNota(pedido.getCliente()));
+
         html.append("""
                             <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background-color:#ffffff;border:1px solid #F6C431;">
                                 <thead>
@@ -307,5 +310,44 @@ public class OrderEmailService {
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
+    }
+
+    private String montarDadosClienteParaNota(Cliente cliente) {
+        StringBuilder html = new StringBuilder();
+
+        html.append("<h2 style=\"margin:0 0 12px 0;font-size:18px;line-height:24px;color:#1F1A17;\">")
+                .append("Dados do cliente para nota fiscal")
+                .append("</h2>");
+
+        html.append("<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;background-color:#ffffff;border:1px solid #F6C431;margin-bottom:22px;\">")
+                .append(montarLinhaDetalhe("Raz&atilde;o Social", primeiroTexto(cliente.getRazaoSocial(), cliente.getNome())))
+                .append(montarLinhaDetalhe("Nome Fantasia", primeiroTexto(cliente.getNomeFantasia(), cliente.getNome())))
+                .append(montarLinhaDetalhe("CNPJ / CPF", primeiroTexto(cliente.getCnpj(), cliente.getDocumento())))
+                .append(montarLinhaDetalhe("IE / Isento", valorOuTraco(cliente.getInscricaoEstadual())))
+                .append(montarLinhaDetalhe("Comprador", valorOuTraco(cliente.getNomeComprador())))
+                .append(montarLinhaDetalhe("Contato", valorOuTraco(cliente.getTelefone())))
+                .append(montarLinhaDetalhe("E-mail", valorOuTraco(cliente.getEmail())))
+                .append(montarLinhaDetalhe("Rua", valorOuTraco(cliente.getRua())))
+                .append(montarLinhaDetalhe("Bairro", valorOuTraco(cliente.getBairro())))
+                .append(montarLinhaDetalhe("Cidade", valorOuTraco(cliente.getCidade())))
+                .append(montarLinhaDetalhe("Estado", valorOuTraco(cliente.getEstado())))
+                .append(montarLinhaDetalhe("CEP", valorOuTraco(cliente.getCep())))
+                .append("</table>");
+
+        return html.toString();
+    }
+
+    private String primeiroTexto(String... valores) {
+        for (String valor : valores) {
+            if (temTexto(valor)) {
+                return valor;
+            }
+        }
+
+        return "-";
+    }
+
+    private String valorOuTraco(String valor) {
+        return temTexto(valor) ? valor : "-";
     }
 }
