@@ -87,8 +87,25 @@ public class TabelaVendaService {
         tabelaVenda.setAtivo(request.ativo() != null ? request.ativo() : tabelaVenda.getAtivo());
         tabelaVenda.setRepresentantes(representantes);
 
+        // Flush a remoção dos itens antigos antes de inserir os novos: sem isso o Hibernate
+        // tenta inserir a nova linha antes de apagar a antiga e colide com uq_tvi_tabela_produto
+        // quando um produto continua na tabela após a edição.
         tabelaVenda.getItens().clear();
+        tabelaVendaRepository.saveAndFlush(tabelaVenda);
+
         tabelaVenda.getItens().addAll(criarItens(request.itens(), tabelaVenda));
+
+        return toResponse(tabelaVendaRepository.save(tabelaVenda));
+    }
+
+    @Transactional
+    public TabelaVendaResponse ativar(Long id, String emailUsuarioLogado) {
+        validarAdmin(emailUsuarioLogado);
+
+        TabelaVenda tabelaVenda = tabelaVendaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tabela de venda não encontrada"));
+
+        tabelaVenda.setAtivo(true);
 
         return toResponse(tabelaVendaRepository.save(tabelaVenda));
     }

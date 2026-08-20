@@ -49,6 +49,15 @@ public class TabelaVendaController {
         return ResponseEntity.ok(tabelaVendaService.editar(id, request, emailUsuarioLogado));
     }
 
+    @PatchMapping("/{id}/ativar")
+    public ResponseEntity<TabelaVendaResponse> ativar(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        String emailUsuarioLogado = authentication.getName();
+        return ResponseEntity.ok(tabelaVendaService.ativar(id, emailUsuarioLogado));
+    }
+
     @PatchMapping("/{id}/inativar")
     public ResponseEntity<TabelaVendaResponse> inativar(
             @PathVariable Long id,
