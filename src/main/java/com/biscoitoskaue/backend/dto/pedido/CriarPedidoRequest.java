@@ -9,6 +9,7 @@ import java.util.List;
 
 public record CriarPedidoRequest(
         @NotNull Long clienteId,
+        Long tabelaVendaId,
         @NotNull TipoPedido tipo,
         String observacao,
         String motivoTroca,

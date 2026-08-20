@@ -31,6 +31,10 @@ public class Pedido extends BaseEntity {
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tabela_venda_id")
+    private TabelaVenda tabelaVenda;
+
     @Column(name = "data_criacao", nullable = false)
     private LocalDateTime dataCriacao;
 

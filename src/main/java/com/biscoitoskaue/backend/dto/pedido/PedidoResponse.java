@@ -14,6 +14,8 @@ public record PedidoResponse(
         String nomeCliente,
         Long usuarioId,
         String nomeUsuario,
+        Long tabelaVendaId,
+        String nomeTabelaVenda,
         LocalDateTime dataCriacao,
         TipoPedido tipo,
         StatusPedido status,

@@ -26,6 +26,8 @@ public class PedidoService {
     private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final TabelaVendaRepository tabelaVendaRepository;
+    private final TabelaVendaItemRepository tabelaVendaItemRepository;
     private final OrderEmailService orderEmailService;
 
     @Transactional
@@ -36,20 +38,31 @@ public class PedidoService {
         Usuario usuario = usuarioRepository.findByEmail(emailUsuarioLogado)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
+        TabelaVenda tabelaVenda = null;
+        if (request.tabelaVendaId() != null) {
+            tabelaVenda = tabelaVendaRepository.findById(request.tabelaVendaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Tabela de venda não encontrada"));
+        }
+
         validarPedido(request);
         validarClienteDoRepresentante(cliente, usuario);
+        if (tabelaVenda != null) {
+            validarTabelaDoRepresentante(tabelaVenda, usuario);
+        }
 
         Pedido pedido = new Pedido();
         pedido.setCliente(cliente);
         pedido.setUsuario(usuario);
+        pedido.setTabelaVenda(tabelaVenda);
         pedido.setDataCriacao(LocalDateTime.now());
         pedido.setTipo(request.tipo());
         pedido.setStatus(StatusPedido.PENDENTE);
         pedido.setObservacao(request.observacao());
         pedido.setMotivoTroca(request.motivoTroca());
 
+        TabelaVenda tabelaVendaDoPedido = tabelaVenda;
         List<ItemPedido> itens = request.itens().stream()
-                .map(itemRequest -> criarItemPedido(itemRequest, pedido))
+                .map(itemRequest -> criarItemPedido(itemRequest, pedido, tabelaVendaDoPedido))
                 .toList();
 
         BigDecimal valorTotal = itens.stream()
@@ -134,12 +147,25 @@ public class PedidoService {
         }
     }
 
-    private ItemPedido criarItemPedido(ItemPedidoRequest request, Pedido pedido) {
+    private void validarTabelaDoRepresentante(TabelaVenda tabelaVenda, Usuario usuario) {
+        if (!Boolean.TRUE.equals(tabelaVenda.getAtivo())) {
+            throw new ResourceNotFoundException("Tabela de venda não encontrada");
+        }
+
+        boolean pertenceAoRepresentante = tabelaVenda.getRepresentantes().stream()
+                .anyMatch(representante -> representante.getId().equals(usuario.getId()));
+
+        if (usuario.getPerfil() == PerfilUsuario.REPRESENTANTE && !pertenceAoRepresentante) {
+            throw new ForbiddenException("Representante não pode usar tabela de venda de outro representante");
+        }
+    }
+
+    private ItemPedido criarItemPedido(ItemPedidoRequest request, Pedido pedido, TabelaVenda tabelaVenda) {
         Produto produto = produtoRepository.findById(request.produtoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
         BigDecimal desconto = request.desconto() != null ? request.desconto() : BigDecimal.ZERO;
-        BigDecimal precoUnitario = produto.getPreco();
+        BigDecimal precoUnitario = resolverPrecoUnitario(produto, tabelaVenda);
         BigDecimal subtotal = precoUnitario
                 .multiply(BigDecimal.valueOf(request.quantidade()))
                 .subtract(desconto);
@@ -153,6 +179,16 @@ public class PedidoService {
         item.setSubtotal(subtotal);
 
         return item;
+    }
+
+    private BigDecimal resolverPrecoUnitario(Produto produto, TabelaVenda tabelaVenda) {
+        if (tabelaVenda == null) {
+            return produto.getPreco();
+        }
+
+        return tabelaVendaItemRepository.findByTabelaVendaIdAndProdutoId(tabelaVenda.getId(), produto.getId())
+                .map(TabelaVendaItem::getPreco)
+                .orElse(produto.getPreco());
     }
 
     private PedidoResponse toResponse(Pedido pedido) {
@@ -174,6 +210,8 @@ public class PedidoService {
                 pedido.getCliente().getNome(),
                 pedido.getUsuario().getId(),
                 pedido.getUsuario().getNome(),
+                pedido.getTabelaVenda() != null ? pedido.getTabelaVenda().getId() : null,
+                pedido.getTabelaVenda() != null ? pedido.getTabelaVenda().getNome() : null,
                 pedido.getDataCriacao(),
                 pedido.getTipo(),
                 pedido.getStatus(),
