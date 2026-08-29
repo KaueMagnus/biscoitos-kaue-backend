@@ -28,8 +28,8 @@ public class ProdutoService {
         Usuario usuario = buscarUsuarioLogado(emailUsuarioLogado);
 
         List<Produto> produtos = usuario.getPerfil() == PerfilUsuario.ADMIN
-                ? produtoRepository.findAll()
-                : produtoRepository.findByAtivoTrue();
+                ? produtoRepository.findAllByOrderByCodigoAsc()
+                : produtoRepository.findByAtivoTrueOrderByCodigoAsc();
 
         return produtos
                 .stream()

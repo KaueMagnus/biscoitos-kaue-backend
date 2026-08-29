@@ -35,8 +35,8 @@ public class TabelaVendaService {
         Usuario usuario = buscarUsuarioLogado(emailUsuarioLogado);
 
         List<TabelaVenda> tabelas = usuario.getPerfil() == PerfilUsuario.ADMIN
-                ? tabelaVendaRepository.findAll()
-                : tabelaVendaRepository.findByAtivoTrueAndRepresentantesId(usuario.getId());
+                ? tabelaVendaRepository.findAllByOrderByNomeAsc()
+                : tabelaVendaRepository.findByAtivoTrueAndRepresentantesIdOrderByNomeAsc(usuario.getId());
 
         return tabelas
                 .stream()

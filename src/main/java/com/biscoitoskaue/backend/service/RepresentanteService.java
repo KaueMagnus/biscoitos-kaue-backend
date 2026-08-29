@@ -27,7 +27,7 @@ public class RepresentanteService {
     public List<RepresentanteResponse> listar(String emailUsuarioLogado) {
         validarAdmin(emailUsuarioLogado);
 
-        return usuarioRepository.findByPerfil(PerfilUsuario.REPRESENTANTE)
+        return usuarioRepository.findByPerfilOrderByNomeAsc(PerfilUsuario.REPRESENTANTE)
                 .stream()
                 .map(this::toResponse)
                 .toList();

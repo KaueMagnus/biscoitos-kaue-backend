@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
-    List<Produto> findByAtivoTrue();
+    List<Produto> findAllByOrderByCodigoAsc();
+
+    List<Produto> findByAtivoTrueOrderByCodigoAsc();
 
     Optional<Produto> findByIdAndAtivoTrue(Long id);
 

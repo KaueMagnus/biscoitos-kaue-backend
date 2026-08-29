@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TabelaVendaRepository extends JpaRepository<TabelaVenda, Long> {
-    List<TabelaVenda> findByAtivoTrue();
+    List<TabelaVenda> findAllByOrderByNomeAsc();
 
-    List<TabelaVenda> findByAtivoTrueAndRepresentantesId(Long representanteId);
+    List<TabelaVenda> findByAtivoTrueAndRepresentantesIdOrderByNomeAsc(Long representanteId);
 
     Optional<TabelaVenda> findByIdAndAtivoTrue(Long id);
 
