@@ -50,6 +50,18 @@ public class RepresentanteService {
     }
 
     @Transactional
+    public RepresentanteResponse ativar(Long id, String emailUsuarioLogado) {
+        validarAdmin(emailUsuarioLogado);
+
+        Usuario representante = usuarioRepository.findByIdAndPerfil(id, PerfilUsuario.REPRESENTANTE)
+                .orElseThrow(() -> new ResourceNotFoundException("Representante não encontrado"));
+
+        representante.setAtivo(true);
+
+        return toResponse(usuarioRepository.save(representante));
+    }
+
+    @Transactional
     public RepresentanteResponse inativar(Long id, String emailUsuarioLogado) {
         validarAdmin(emailUsuarioLogado);
 

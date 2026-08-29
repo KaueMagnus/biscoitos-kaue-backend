@@ -34,6 +34,15 @@ public class RepresentanteController {
         return ResponseEntity.ok(representanteService.cadastrar(request, emailUsuarioLogado));
     }
 
+    @PatchMapping("/{id}/ativar")
+    public ResponseEntity<RepresentanteResponse> ativar(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        String emailUsuarioLogado = authentication.getName();
+        return ResponseEntity.ok(representanteService.ativar(id, emailUsuarioLogado));
+    }
+
     @PatchMapping("/{id}/inativar")
     public ResponseEntity<RepresentanteResponse> inativar(
             @PathVariable Long id,

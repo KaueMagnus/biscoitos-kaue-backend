@@ -85,6 +85,18 @@ public class ProdutoService {
     }
 
     @Transactional
+    public ProdutoResponse ativar(Long id, String emailUsuarioLogado) {
+        validarAdmin(emailUsuarioLogado);
+
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
+
+        produto.setAtivo(true);
+
+        return toResponse(produtoRepository.save(produto));
+    }
+
+    @Transactional
     public ProdutoResponse inativar(Long id, String emailUsuarioLogado) {
         validarAdmin(emailUsuarioLogado);
 

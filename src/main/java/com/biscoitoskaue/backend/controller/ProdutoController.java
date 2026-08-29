@@ -49,6 +49,15 @@ public class ProdutoController {
         return ResponseEntity.ok(produtoService.editar(id, request, emailUsuarioLogado));
     }
 
+    @PatchMapping("/{id}/ativar")
+    public ResponseEntity<ProdutoResponse> ativar(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        String emailUsuarioLogado = authentication.getName();
+        return ResponseEntity.ok(produtoService.ativar(id, emailUsuarioLogado));
+    }
+
     @PatchMapping("/{id}/inativar")
     public ResponseEntity<ProdutoResponse> inativar(
             @PathVariable Long id,
