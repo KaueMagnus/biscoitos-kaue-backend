@@ -1,6 +1,7 @@
 package com.biscoitoskaue.backend.dto.pedido;
 
 import com.biscoitoskaue.backend.dto.cliente.ClienteResponse;
+import com.biscoitoskaue.backend.enums.FormaPagamento;
 import com.biscoitoskaue.backend.enums.StatusPedido;
 import com.biscoitoskaue.backend.enums.TipoPedido;
 
@@ -18,6 +19,7 @@ public record PedidoResponse(
         String nomeTabelaVenda,
         LocalDateTime dataCriacao,
         TipoPedido tipo,
+        FormaPagamento formaPagamento,
         StatusPedido status,
         String observacao,
         String motivoTroca,

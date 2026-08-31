@@ -169,6 +169,7 @@ public class OrderEmailService {
         html.append("<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;margin-bottom:20px;\">")
                 .append("<tr>")
                 .append(montarBadge("Tipo", pedido.getTipo().name(), "#B65412"))
+                .append(montarBadge("Forma de pagamento", pedido.getFormaPagamento().getDescricao(), "#1F1A17"))
                 .append(montarBadge("Status", pedido.getStatus().name(), "#D9231F"))
                 .append("</tr>")
                 .append("</table>");

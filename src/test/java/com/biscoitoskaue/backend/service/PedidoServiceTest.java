@@ -4,6 +4,7 @@ import com.biscoitoskaue.backend.dto.pedido.CriarPedidoRequest;
 import com.biscoitoskaue.backend.dto.pedido.ItemPedidoRequest;
 import com.biscoitoskaue.backend.dto.pedido.PedidoResponse;
 import com.biscoitoskaue.backend.entity.*;
+import com.biscoitoskaue.backend.enums.FormaPagamento;
 import com.biscoitoskaue.backend.enums.PerfilUsuario;
 import com.biscoitoskaue.backend.enums.TipoPedido;
 import com.biscoitoskaue.backend.exception.ForbiddenException;
@@ -162,6 +163,7 @@ class PedidoServiceTest {
                 1L,
                 tabelaVendaId,
                 TipoPedido.NORMAL,
+                FormaPagamento.BOLETO_A_VISTA,
                 null,
                 null,
                 List.of(new ItemPedidoRequest(1L, 2, null))
