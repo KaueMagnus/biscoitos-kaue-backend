@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum FormaPagamento {
-    BOLETO_A_VISTA("Boleto a vista"),
+    BOLETO_A_VISTA("Boleto à vista"),
     BOLETO_28_DIAS("Boleto 28 dias");
 
     private final String descricao;
