@@ -1,5 +1,6 @@
 package com.biscoitoskaue.backend.entity;
 
+import com.biscoitoskaue.backend.enums.FormaPagamento;
 import com.biscoitoskaue.backend.enums.StatusPedido;
 import com.biscoitoskaue.backend.enums.TipoPedido;
 import jakarta.persistence.*;
@@ -45,6 +46,10 @@ public class Pedido extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StatusPedido status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "forma_pagamento", nullable = false, length = 20)
+    private FormaPagamento formaPagamento;
 
     @Column(length = 500)
     private String observacao;

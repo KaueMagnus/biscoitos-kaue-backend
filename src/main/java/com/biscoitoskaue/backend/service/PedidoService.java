@@ -56,6 +56,7 @@ public class PedidoService {
         pedido.setTabelaVenda(tabelaVenda);
         pedido.setDataCriacao(LocalDateTime.now());
         pedido.setTipo(request.tipo());
+        pedido.setFormaPagamento(request.formaPagamento());
         pedido.setStatus(StatusPedido.PENDENTE);
         pedido.setObservacao(request.observacao());
         pedido.setMotivoTroca(request.motivoTroca());
@@ -214,6 +215,7 @@ public class PedidoService {
                 pedido.getTabelaVenda() != null ? pedido.getTabelaVenda().getNome() : null,
                 pedido.getDataCriacao(),
                 pedido.getTipo(),
+                pedido.getFormaPagamento(),
                 pedido.getStatus(),
                 pedido.getObservacao(),
                 pedido.getMotivoTroca(),
