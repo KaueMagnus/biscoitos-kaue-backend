@@ -79,7 +79,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "https://biscoitos-kaue-web.vercel.app",
-                "https://biscoitos-kaue-web-prod.vercel.app"
+                "https://biscoitos-kaue-web-prod.vercel.app",
+                "https://painel.biscoitoskaue.com.br"
         ));
 
         configuration.setAllowedMethods(List.of(
